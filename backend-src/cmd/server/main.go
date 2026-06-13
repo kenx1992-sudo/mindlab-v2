@@ -158,15 +158,21 @@ func main() {
 	llmClient = llm.NewClient(nil) // uses env vars: LLM_BASE_URL, LLM_API_KEY, LLM_MODEL
 
 	// Try PostgreSQL connection, fallback to in-memory store
-	dbHost := os.Getenv("DB_HOST")
-	if dbHost != "" {
-		connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-			dbHost,
-			os.Getenv("DB_PORT"),
-			os.Getenv("DB_USER"),
-			os.Getenv("DB_PASSWORD"),
-			os.Getenv("DB_NAME"),
-		)
+	// Support both DATABASE_URL (Railway) and individual DB_* vars
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		dbHost := os.Getenv("DB_HOST")
+		if dbHost != "" {
+			connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+				dbHost,
+				os.Getenv("DB_PORT"),
+				os.Getenv("DB_USER"),
+				os.Getenv("DB_PASSWORD"),
+				os.Getenv("DB_NAME"),
+			)
+		}
+	}
+	if connStr != "" {
 		pgStore, err := pgstore.NewPostgresStore(connStr)
 		if err != nil {
 			logger.Warn("postgres_connect_failed", "error", err, "msg", "falling back to in-memory store")

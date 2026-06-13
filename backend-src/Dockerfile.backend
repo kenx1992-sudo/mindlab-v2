@@ -1,5 +1,4 @@
-# Backend Dockerfile — multi-stage, production-ready
-# Build: docker build -t mindlab-backend:latest -f Dockerfile.backend .
+﻿# Backend Dockerfile - multi-stage, production-ready
 FROM golang:1.22-alpine AS builder
 RUN apk add --no-cache git ca-certificates tzdata
 WORKDIR /app
@@ -13,7 +12,8 @@ RUN apk add --no-cache ca-certificates tzdata curl
 WORKDIR /app
 COPY --from=builder /mindlab-server /app/mindlab-server
 COPY schema.sql /app/schema.sql
-ENV PORT=8080 GIN_MODE=release
+COPY knowledge-base /app/knowledge-base
+ENV PORT=8080 GIN_MODE=release KB_PATH=/app/knowledge-base
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:8080/healthz || exit 1
