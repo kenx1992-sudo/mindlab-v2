@@ -1,0 +1,38 @@
+# 🇹🇼 Taiwan Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mindlab-ingress
+  namespace: mindlab-tw
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - tw.mindlab.ai
+        - api-tw.mindlab.ai
+      secretName: mindlab-tw-tls
+  rules:
+    - host: tw.mindlab.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mindlab-frontend
+                port:
+                  number: 80
+    - host: api-tw.mindlab.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mindlab-backend
+                port:
+                  number: 80

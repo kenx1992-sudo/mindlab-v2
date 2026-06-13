@@ -1,0 +1,165 @@
+# Istio Gateway — global entry point for all regions
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: mindlab-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: mindlab-wildcard-tls
+      hosts:
+        - "*.mindlab.ai"
+        - "mindlab.ai"
+---
+# VirtualService — geo-based routing (HK/TW/GB)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: mindlab-global
+  namespace: istio-system
+spec:
+  hosts:
+    - "mindlab.ai"
+    - "www.mindlab.ai"
+  gateways:
+    - mindlab-gateway
+  http:
+    # 🇭🇰 Hong Kong route
+    - match:
+        - headers:
+            "x-forwarded-for":
+              regex: ".*HK.*"
+        - queryParams:
+            region:
+              exact: "hk"
+      route:
+        - destination:
+            host: mindlab-frontend.mindlab-hk.svc.cluster.local
+            port:
+              number: 80
+    # 🇹🇼 Taiwan route
+    - match:
+        - headers:
+            "x-forwarded-for":
+              regex: ".*TW.*"
+        - queryParams:
+            region:
+              exact: "tw"
+      route:
+        - destination:
+            host: mindlab-frontend.mindlab-tw.svc.cluster.local
+            port:
+              number: 80
+    # 🇬🇧 United Kingdom route (default for EU/US)
+    - match:
+        - headers:
+            "x-forwarded-for":
+              regex: ".*GB.*"
+        - queryParams:
+            region:
+              exact: "gb"
+      route:
+        - destination:
+            host: mindlab-frontend.mindlab-gb.svc.cluster.local
+            port:
+              number: 80
+    # Default: geo-IP based fallback (HK as default for APAC)
+    - route:
+        - destination:
+            host: mindlab-frontend.mindlab-hk.svc.cluster.local
+            port:
+              number: 80
+---
+# VirtualService — API routing per region
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: mindlab-api
+  namespace: istio-system
+spec:
+  hosts:
+    - "api.mindlab.ai"
+  gateways:
+    - mindlab-gateway
+  http:
+    - match:
+        - uri:
+            prefix: "/api/crisis"
+        - headers:
+            "x-region":
+              exact: "hk"
+      route:
+        - destination:
+            host: mindlab-backend.mindlab-hk.svc.cluster.local
+            port:
+              number: 80
+      retries:
+        attempts: 3
+        perTryTimeout: 5s
+      timeout: 15s
+    - match:
+        - uri:
+            prefix: "/api/crisis"
+        - headers:
+            "x-region":
+              exact: "tw"
+      route:
+        - destination:
+            host: mindlab-backend.mindlab-tw.svc.cluster.local
+            port:
+              number: 80
+      retries:
+        attempts: 3
+        perTryTimeout: 5s
+      timeout: 15s
+    - match:
+        - uri:
+            prefix: "/api/crisis"
+        - headers:
+            "x-region":
+              exact: "gb"
+      route:
+        - destination:
+            host: mindlab-backend.mindlab-gb.svc.cluster.local
+            port:
+              number: 80
+      retries:
+        attempts: 3
+        perTryTimeout: 5s
+      timeout: 15s
+    # Default API route
+    - route:
+        - destination:
+            host: mindlab-backend.mindlab-hk.svc.cluster.local
+            port:
+              number: 80
+---
+# DestinationRule — circuit breaker for backend
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: mindlab-backend-dr
+  namespace: istio-system
+spec:
+  host: mindlab-backend.mindlab-hk.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 200
+      http:
+        h2UpgradePolicy: DEFAULT
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 200
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 30s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50

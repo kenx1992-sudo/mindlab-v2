@@ -1,0 +1,17 @@
+﻿@import '../styles/tokens.css';
+@import '../styles/index.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: var(--color-background, #F5F0E8);
+  --foreground: var(--color-foreground, #2C3E50);
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-body, 'Noto Sans HK', 'Noto Sans TC', 'Inter', system-ui, sans-serif);
+}

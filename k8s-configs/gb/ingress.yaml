@@ -1,0 +1,39 @@
+# 🇬🇧 United Kingdom Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mindlab-ingress
+  namespace: mindlab-gb
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/waf: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - gb.mindlab.ai
+        - api-gb.mindlab.ai
+      secretName: mindlab-gb-tls
+  rules:
+    - host: gb.mindlab.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mindlab-frontend
+                port:
+                  number: 80
+    - host: api-gb.mindlab.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mindlab-backend
+                port:
+                  number: 80

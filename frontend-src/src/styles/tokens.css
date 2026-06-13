@@ -1,0 +1,122 @@
+/* ===== Mindlab Brand Design Tokens ===== */
+
+:root {
+  /* ── Brand Colors ── */
+  --color-primary: #2D5A4A;        /* 森林绿 — 品牌识别、标题、强调按钮 */
+  --color-primary-light: #3A7561;  /* 森林绿-浅 — Hover/Active */
+  --color-primary-dark: #1E3D33;   /* 森林绿-深 — 高对比场景 */
+  --color-secondary: #E8B86D;      /* 琥珀金 — CTA按钮、高亮元素 */
+  --color-secondary-light: #F0CC8E;/* 琥珀金-浅 — Hover */
+  --color-secondary-dark: #D4A050; /* 琥珀金-深 — Active */
+  --color-background: #F5F0E8;     /* 米白 — 对话背景、卡片底色 */
+  --color-background-alt: #EDE7DB; /* 米白-深 — 交替背景 */
+  --color-surface: #FFFFFF;        /* 纯白 — 卡片/弹窗背景 */
+  --color-text: #2C3E50;           /* 岩石灰 — 正文内容 */
+  --color-text-secondary: #5D6D7E; /* 岩石灰-浅 — 次要文字 */
+  --color-text-muted: #95A5A6;     /* 岩石灰-弱 — 占位/提示 */
+  --color-danger: #EF4444;         /* 警示红 — 紧急支援、危机入口 */
+  --color-danger-light: #FCA5A5;   /* 警示红-浅 — 危机背景 */
+  --color-danger-dark: #DC2626;    /* 警示红-深 — Active */
+  --color-success: #10B981;        /* 成功绿 — 操作确认 */
+  --color-warning: #F59E0B;        /* 警告黄 — 注意提示 */
+
+  /* ── Typography ── */
+  --font-display: 'Playfair Display', 'Noto Serif HK', 'Noto Serif TC', Georgia, serif;
+  --font-body: 'Noto Sans HK', 'Noto Sans TC', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;    /* 4px */
+  --space-2: 0.5rem;     /* 8px */
+  --space-3: 0.75rem;    /* 12px */
+  --space-4: 1rem;       /* 16px */
+  --space-5: 1.25rem;    /* 20px */
+  --space-6: 1.5rem;     /* 24px */
+  --space-8: 2rem;       /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+
+  /* ── Border Radius ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-soft: 0 2px 12px rgba(45, 90, 74, 0.08);
+  --shadow-medium: 0 4px 20px rgba(45, 90, 74, 0.12);
+  --shadow-elevated: 0 8px 32px rgba(45, 90, 74, 0.16);
+  --shadow-crisis: 0 0 0 4px rgba(239, 68, 68, 0.2), 0 8px 32px rgba(239, 68, 68, 0.24);
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Z-Index Scale ── */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-crisis: 9999;  /* 危机弹窗最高层 */
+
+  /* ── Layout ── */
+  --max-width: 768px;          /* 对话区域最大宽度 — 阅读舒适 */
+  --chat-max-width: 640px;     /* 聊天气泡区域 */
+  --sidebar-width: 320px;      /* 侧边栏 */
+
+  /* ── Focus Ring (Accessibility) ── */
+  --focus-ring: 0 0 0 3px rgba(45, 90, 74, 0.4);
+  --focus-ring-danger: 0 0 0 3px rgba(239, 68, 68, 0.4);
+}
+
+/* ── Region-Specific Overrides ── */
+
+/* 🇭🇰 香港 */
+[data-locale="hk"] {
+  --region-slogan: "陪住你，每一刻";
+  --region-ai-name: "AI心理陪伴夥伴";
+  --region-counselor-name: "認證心理輔導員（HKPCA認證）";
+  --region-minor-age: 16;
+  --region-data-location: "香港";
+}
+
+/* 🇹🇼 台湾 */
+[data-locale="tw"] {
+  --region-slogan: "陪伴你，走过去";
+  --region-ai-name: "AI心理陪伴夥伴";
+  --region-counselor-name: "諮商心理師";
+  --region-minor-age: 18;
+  --region-data-location: "臺灣";
+}
+
+/* 🇬🇧 英国 */
+[data-locale="gb"] {
+  --region-slogan: "Always here for you";
+  --region-ai-name: "AI mental wellbeing companion";
+  --region-counselor-name: "Wellbeing counsellor (BACP/UKCP registered)";
+  --region-minor-age: 13;
+  --region-data-location: "United Kingdom";
+  --font-body: 'Inter', system-ui, sans-serif;
+}

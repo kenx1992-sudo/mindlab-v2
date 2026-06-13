@@ -1,0 +1,21 @@
+# Namespaces for all three regions
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mindlab-hk
+  labels:
+    region: hk
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mindlab-tw
+  labels:
+    region: tw
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mindlab-gb
+  labels:
+    region: gb

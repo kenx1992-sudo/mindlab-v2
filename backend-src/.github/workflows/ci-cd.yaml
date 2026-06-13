@@ -1,0 +1,205 @@
+name: Mindlab CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, release/*]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: harbor.mindlab.ai  # Private Harbor registry (Docker Hub替代)
+  BACKEND_IMAGE: ${{ env.REGISTRY }}/mindlab/backend
+  FRONTEND_IMAGE: ${{ env.REGISTRY }}/mindlab/frontend
+
+jobs:
+  # ═══ Backend: Build + Test + Push ═══
+  backend-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Build binary
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o mindlab-server ./cmd/server
+
+      - name: Login to Harbor
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: harbor.mindlab.ai
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Build & push backend image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.backend
+          push: true
+          tags: |
+            harbor.mindlab.ai/mindlab/backend:${{ github.sha }}
+            harbor.mindlab.ai/mindlab/backend:latest
+          cache-from: type=registry,ref=harbor.mindlab.ai/mindlab/backend:latest
+          cache-to: type=inline
+
+  # ═══ Frontend: Build + Test + Push ═══
+  frontend-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: mindlab-app/package-lock.json
+
+      - name: Install & Lint
+        working-directory: mindlab-app
+        run: |
+          npm ci
+          npm run lint
+
+      - name: Type check
+        working-directory: mindlab-app
+        run: npx tsc --noEmit
+
+      - name: Test
+        working-directory: mindlab-app
+        run: npm test -- --coverage
+
+      - name: Login to Harbor
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: harbor.mindlab.ai
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Build & push frontend image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mindlab-app
+          push: true
+          tags: |
+            harbor.mindlab.ai/mindlab/frontend:${{ github.sha }}
+            harbor.mindlab.ai/mindlab/frontend:latest
+          cache-from: type=registry,ref=harbor.mindlab.ai/mindlab/frontend:latest
+          cache-to: type=inline
+
+  # ═══ Deploy: HK Canary → TW → GB ═══
+  deploy-hk-canary:
+    needs: [backend-ci, frontend-ci]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: hk-canary
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy HK canary (1 pod)
+        run: |
+          kubectl set image deployment/mindlab-backend \
+            backend=harbor.mindlab.ai/mindlab/backend:${{ github.sha }} \
+            -n mindlab-hk --record
+          kubectl set image deployment/mindlab-frontend \
+            frontend=harbor.mindlab.ai/mindlab/frontend:${{ github.sha }} \
+            -n mindlab-hk --record
+          kubectl patch deployment mindlab-backend -n mindlab-hk \
+            -p '{"spec":{"replicas":1}}'
+          echo "⏳ Waiting 2min canary observation..."
+          sleep 120
+          kubectl rollout status deployment/mindlab-backend -n mindlab-hk --timeout=120s
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG_HK }}
+
+      - name: Smoke test HK canary
+        run: |
+          sleep 15
+          curl -sf https://api-hk.mindlab.ai/healthz || exit 1
+          curl -sf https://hk.mindlab.ai/api/health || exit 1
+          echo "✅ HK canary smoke test passed"
+
+  deploy-hk-full:
+    needs: deploy-hk-canary
+    runs-on: ubuntu-latest
+    environment: hk-production
+    steps:
+      - name: Scale HK to full replicas
+        run: |
+          kubectl patch deployment mindlab-backend -n mindlab-hk \
+            -p '{"spec":{"replicas":3}}'
+          kubectl patch deployment mindlab-frontend -n mindlab-hk \
+            -p '{"spec":{"replicas":2}}'
+          kubectl rollout status deployment/mindlab-backend -n mindlab-hk --timeout=300s
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG_HK }}
+
+  deploy-tw:
+    needs: deploy-hk-full
+    runs-on: ubuntu-latest
+    environment: tw-production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy TW
+        run: |
+          kubectl apply -k k8s/tw/ -n mindlab-tw
+          kubectl set image deployment/mindlab-backend \
+            backend=harbor.mindlab.ai/mindlab/backend:${{ github.sha }} \
+            -n mindlab-tw --record
+          kubectl set image deployment/mindlab-frontend \
+            frontend=harbor.mindlab.ai/mindlab/frontend:${{ github.sha }} \
+            -n mindlab-tw --record
+          kubectl rollout status deployment/mindlab-backend -n mindlab-tw --timeout=300s
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG_TW }}
+
+  deploy-gb:
+    needs: deploy-tw
+    runs-on: ubuntu-latest
+    environment: gb-production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy GB
+        run: |
+          kubectl apply -k k8s/gb/ -n mindlab-gb
+          kubectl set image deployment/mindlab-backend \
+            backend=harbor.mindlab.ai/mindlab/backend:${{ github.sha }} \
+            -n mindlab-gb --record
+          kubectl set image deployment/mindlab-frontend \
+            frontend=harbor.mindlab.ai/mindlab/frontend:${{ github.sha }} \
+            -n mindlab-gb --record
+          kubectl rollout status deployment/mindlab-backend -n mindlab-gb --timeout=300s
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG_GB }}
+
+  # ═══ Rollback job (manual trigger) ═══
+  rollback:
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback failed region
+        run: |
+          echo "❌ Deployment failed, rolling back..."
+          kubectl rollout undo deployment/mindlab-backend -n ${REGION}
+          kubectl rollout undo deployment/mindlab-frontend -n ${REGION}
+        env:
+          REGION: ${{ github.event.inputs.region || 'mindlab-hk' }}

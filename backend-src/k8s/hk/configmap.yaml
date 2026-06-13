@@ -1,0 +1,30 @@
+# 🇭🇰 Hong Kong ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mindlab-config
+  namespace: mindlab-hk
+data:
+  APP_REGION: "HK"
+  PORT: "8080"
+  DB_HOST: "postgres.mindlab-hk.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "mindlab"
+  DB_USER: "mindlab"
+  REDIS_ADDR: "redis.mindlab-hk.svc.cluster.local:6379"
+  NATS_ADDR: "nats.mindlab-hk.svc.cluster.local:4222"
+  # HK-specific: PDPA compliance, traditional Chinese (Cantonese)
+  LOCALE: "zh-HK"
+  CURRENCY: "HKD"
+  COUNSELOR_CERT_BODY: "HKPCA"
+  CONSENT_FRAMEWORK: "PDPO"
+  DATA_RESIDENCY: "hk"
+  MINOR_AGE_THRESHOLD: "18"
+  CRISIS_HOTLINE: "2382-0000"
+  DISARM_COUNSELLOR: "輔導員"
+  DISARM_THERAPY: "心理輔導"
+  DISARM_DIAGNOSIS: "評估"
+  MEDICAL_DISCLAIMER_HK: "AI生成內容，僅供參考。本服務為心理支持，非醫療診斷或治療。"
+  NEXT_PUBLIC_API_URL: "https://api-hk.mindlab.ai"
+  NEXT_PUBLIC_REGION: "HK"
+  NEXT_PUBLIC_LOCALE: "zh-HK"

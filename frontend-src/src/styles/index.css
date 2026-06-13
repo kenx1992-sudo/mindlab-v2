@@ -1,0 +1,146 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 預設：晨光林 — 可被 applyTheme() 覆寫 */
+    --background: 36 33% 97%;
+    --foreground: 200 15% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 200 15% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 15% 15%;
+    --primary: 168 35% 32%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 36 30% 92%;
+    --secondary-foreground: 200 15% 25%;
+    --muted: 36 20% 94%;
+    --muted-foreground: 200 10% 45%;
+    --accent: 38 45% 52%;
+    --accent-foreground: 36 33% 97%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 36 20% 88%;
+    --input: 36 20% 88%;
+    --ring: 168 35% 32%;
+    --radius: 0.875rem;
+    --font-playfair: 'Playfair Display', serif;
+    --font-inter: 'Noto Sans TC', system-ui, sans-serif;
+    --glow-warm: 38 55% 58%;
+    --glow-sage: 168 35% 38%;
+    --hero-warm-opacity: 0.2;
+    --hero-sage-opacity: 0.15;
+    --hero-base: 36 30% 95%;
+    --hero-deep: 168 25% 92%;
+    --card-shadow: 0 8px 24px -8px rgb(0 0 0 / 0.08);
+    --bubble-user-bg: 168 35% 32% / 0.12;
+    --bubble-user-border: 168 35% 32% / 0.28;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-background text-foreground font-inter;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--glow-sage) / var(--hero-sage-opacity)), transparent),
+      radial-gradient(ellipse 55% 40% at 100% 0%, hsl(var(--glow-warm) / var(--hero-warm-opacity)), transparent);
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .font-playfair {
+    font-family: var(--font-playfair);
+  }
+  .calm-hero {
+    background:
+      radial-gradient(ellipse 90% 70% at 25% 0%, hsl(var(--glow-warm) / var(--hero-warm-opacity)), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 85% 15%, hsl(var(--glow-sage) / var(--hero-sage-opacity)), transparent 50%),
+      linear-gradient(165deg, hsl(var(--hero-base)) 0%, hsl(var(--background)) 50%, hsl(var(--hero-deep)) 100%);
+  }
+  .calm-card {
+    @apply bg-card backdrop-blur-sm border border-border/80;
+    box-shadow: var(--card-shadow);
+  }
+  [data-theme-mode='dark'] .calm-card {
+    @apply bg-card border-border;
+  }
+  [data-theme-mode='dark'] .text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+  }
+  [data-theme-mode='dark'] {
+    color-scheme: dark;
+  }
+  .calm-alert-success {
+    @apply border border-emerald-500/30 bg-emerald-500/10;
+  }
+  .calm-alert-success .calm-alert-title {
+    @apply font-semibold text-emerald-800;
+  }
+  .calm-alert-success .calm-alert-body {
+    @apply text-emerald-700/90;
+  }
+  [data-theme-mode='dark'] .calm-alert-success {
+    @apply border-emerald-400/35 bg-emerald-500/15;
+  }
+  [data-theme-mode='dark'] .calm-alert-success .calm-alert-title {
+    @apply text-emerald-200;
+  }
+  [data-theme-mode='dark'] .calm-alert-success .calm-alert-body {
+    @apply text-emerald-300/90;
+  }
+  .calm-alert-warn,
+  .calm-alert-crisis {
+    @apply border border-amber-500/35 bg-amber-500/10;
+  }
+  .calm-alert-warn .calm-alert-title,
+  .calm-alert-crisis .calm-alert-title {
+    @apply font-semibold text-amber-900;
+  }
+  .calm-alert-warn .calm-alert-body,
+  .calm-alert-crisis .calm-alert-body {
+    @apply text-amber-800/90;
+  }
+  .calm-alert-crisis .calm-alert-detail {
+    @apply text-amber-900/90;
+  }
+  [data-theme-mode='dark'] .calm-alert-warn,
+  [data-theme-mode='dark'] .calm-alert-crisis {
+    @apply border-amber-400/40 bg-amber-500/15;
+  }
+  [data-theme-mode='dark'] .calm-alert-warn .calm-alert-title,
+  [data-theme-mode='dark'] .calm-alert-crisis .calm-alert-title {
+    @apply text-amber-100;
+  }
+  [data-theme-mode='dark'] .calm-alert-warn .calm-alert-body,
+  [data-theme-mode='dark'] .calm-alert-crisis .calm-alert-body {
+    @apply text-amber-200/85;
+  }
+  [data-theme-mode='dark'] .calm-alert-crisis .calm-alert-detail {
+    @apply text-amber-100/90;
+  }
+  [data-theme-mode='dark'] .calm-alert-crisis .calm-alert-phone {
+    @apply text-amber-50;
+  }
+  .calm-glow-ring {
+    box-shadow:
+      0 0 0 1px hsl(var(--border)),
+      0 0 20px -4px hsl(var(--primary) / 0.35);
+  }
+  .bubble-user {
+    background: hsl(var(--bubble-user-bg));
+    border: 1px solid hsl(var(--bubble-user-border));
+    color: hsl(var(--foreground));
+  }
+  .bubble-assistant {
+    @apply bg-card/95 border border-border/80 text-foreground;
+  }
+}
+

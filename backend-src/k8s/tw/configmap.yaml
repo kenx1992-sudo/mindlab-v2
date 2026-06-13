@@ -1,0 +1,31 @@
+# 🇹🇼 Taiwan ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mindlab-config
+  namespace: mindlab-tw
+data:
+  APP_REGION: "TW"
+  PORT: "8080"
+  DB_HOST: "postgres.mindlab-tw.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "mindlab"
+  DB_USER: "mindlab"
+  REDIS_ADDR: "redis.mindlab-tw.svc.cluster.local:6379"
+  NATS_ADDR: "nats.mindlab-tw.svc.cluster.local:4222"
+  # TW-specific: PDPA, traditional Chinese (Mandarin), suicide prevention mandatory
+  LOCALE: "zh-TW"
+  CURRENCY: "TWD"
+  COUNSELOR_CERT_BODY: "中華民國諮商心理師公會"
+  CONSENT_FRAMEWORK: "PDPA"
+  DATA_RESIDENCY: "tw"
+  MINOR_AGE_THRESHOLD: "20"
+  CRISIS_HOTLINE: "1925"
+  CRISIS_GATEKEEPER_MANDATORY: "true"
+  DISARM_COUNSELLOR: "諮商心理師"
+  DISARM_THERAPY: "諮商"
+  DISARM_DIAGNOSIS: "評估"
+  MEDICAL_DISCLAIMER_TW: "AI生成內容，僅供參考。本服務為心理支持，非醫療診斷或治療。"
+  NEXT_PUBLIC_API_URL: "https://api-tw.mindlab.ai"
+  NEXT_PUBLIC_REGION: "TW"
+  NEXT_PUBLIC_LOCALE: "zh-TW"

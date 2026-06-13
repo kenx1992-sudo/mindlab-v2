@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mindlab-backend
+  labels:
+    app: mindlab-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mindlab-backend
+  template:
+    metadata:
+      labels:
+        app: mindlab-backend
+    spec:
+      containers:
+        - name: backend
+          image: mindlab-backend:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: mindlab-config
+            - secretRef:
+                name: mindlab-secrets
+          env:
+            - name: APP_REGION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['region']
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: mindlab-backend
+                topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mindlab-backend
+spec:
+  selector:
+    app: mindlab-backend
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP

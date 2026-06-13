@@ -1,0 +1,96 @@
+version: "3.8"
+
+# Full-stack local development environment
+# Usage: docker-compose up --build
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8080
+# Crisis V2: POST http://localhost:8080/api/crisis/detect-v2
+
+services:
+  # ═══ Infrastructure ═══
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mindlab
+      POSTGRES_USER: mindlab
+      POSTGRES_PASSWORD: mindlab_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindlab"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nats:
+    image: nats:2-alpine
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["--jetstream", "--store_dir", "/data"]
+    volumes:
+      - natsdata:/data
+
+  # ═══ Backend (Go) ═══
+  backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      APP_REGION: "HK"
+      GIN_MODE: "debug"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: mindlab
+      DB_USER: mindlab
+      DB_PASSWORD: mindlab_dev
+      REDIS_ADDR: redis:6379
+      NATS_ADDR: nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ═══ Frontend (Next.js) ═══
+  frontend:
+    build:
+      context: ../../p-moeo9l8roo8bhc-worker1/mindlab-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:8080"
+      NEXT_PUBLIC_REGION: "HK"
+      NEXT_PUBLIC_LOCALE: "zh-HK"
+      NEXT_PUBLIC_WS_URL: "ws://localhost:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  natsdata:

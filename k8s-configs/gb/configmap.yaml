@@ -1,0 +1,32 @@
+# 🇬🇧 United Kingdom ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mindlab-config
+  namespace: mindlab-gb
+data:
+  APP_REGION: "GB"
+  PORT: "8080"
+  DB_HOST: "postgres.mindlab-gb.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "mindlab"
+  DB_USER: "mindlab"
+  REDIS_ADDR: "redis.mindlab-gb.svc.cluster.local:6379"
+  NATS_ADDR: "nats.mindlab-gb.svc.cluster.local:4222"
+  # GB-specific: UK GDPR + Online Safety Act 2023, NHS pathways
+  LOCALE: "en-GB"
+  CURRENCY: "GBP"
+  COUNSELOR_CERT_BODY: "BACP/NCS"
+  CONSENT_FRAMEWORK: "UK_GDPR"
+  DATA_RESIDENCY: "gb"
+  MINOR_AGE_THRESHOLD: "18"
+  CRISIS_HOTLINE: "116-123"
+  OSA_COMPLIANCE_ENABLED: "true"
+  NHS_REFERRAL_PATHWAY: "true"
+  DISARM_COUNSELLOR: "counsellor"
+  DISARM_THERAPY: "wellbeing support"
+  DISARM_DIAGNOSIS: "assessment"
+  MEDICAL_DISCLAIMER_GB: "AI-generated content, for reference only. This is mental wellbeing support, not medical treatment."
+  NEXT_PUBLIC_API_URL: "https://api-gb.mindlab.ai"
+  NEXT_PUBLIC_REGION: "GB"
+  NEXT_PUBLIC_LOCALE: "en-GB"

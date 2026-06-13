@@ -1,0 +1,128 @@
+# Prometheus ServiceMonitor — Mindlab Backend
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mindlab-backend
+  namespace: monitoring
+  labels:
+    app: mindlab-backend
+spec:
+  selector:
+    matchLabels:
+      app: mindlab-backend
+  namespaceSelector:
+    any: true
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+---
+# PrometheusRule — Mindlab Alerting Rules
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mindlab-alerts
+  namespace: monitoring
+spec:
+  groups:
+    # ═══ Crisis Detection Alerts (P0) ═══
+    - name: mindlab-crisis
+      rules:
+        - alert: CrisisDetectionLatencyHigh
+          expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{handler="/api/crisis/detect-v2"}[5m])) > 1.0
+          for: 2m
+          labels:
+            severity: critical
+            region: "{{ $labels.namespace }}"
+          annotations:
+            summary: "Crisis detection P95 latency > 1s"
+            runbook: "https://wiki.mindlab.ai/runbooks/crisis-latency"
+        
+        - alert: CrisisDetectionErrorRate
+          expr: rate(http_request_duration_seconds_count{handler="/api/crisis/detect-v2",code=~"5.."}[5m]) / rate(http_request_duration_seconds_count{handler="/api/crisis/detect-v2"}[5m]) > 0.01
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Crisis detection 5xx error rate > 1%"
+        
+        - alert: CrisisQueueDepthHigh
+          expr: crisis_detection_queue_depth > 50
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Crisis detection queue depth > 50, HPA should scale"
+
+    # ═══ Backend Health Alerts (P1) ═══
+    - name: mindlab-backend
+      rules:
+        - alert: BackendHighErrorRate
+          expr: rate(http_request_duration_seconds_count{code=~"5.."}[5m]) / rate(http_request_duration_seconds_count[5m]) > 0.05
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Backend 5xx error rate > 5%"
+        
+        - alert: BackendPodRestarting
+          expr: increase(kube_pod_container_status_restarts_total{container="backend"}[1h]) > 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Backend pod restarting frequently"
+        
+        - alert: BackendMemoryHigh
+          expr: container_memory_working_set_bytes{container="backend"} / container_spec_memory_limit_bytes{container="backend"} > 0.85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Backend memory usage > 85%"
+
+    # ═══ Compliance Alerts (P0) ═══
+    - name: mindlab-compliance
+      rules:
+        - alert: OSAReviewFailures
+          expr: increase(osa_review_total{result="error"}[10m]) > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "OSA review engine returning errors"
+        
+        - alert: ComplianceFilterBypass
+          expr: increase(word_filter_bypass_total[10m]) > 5
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Possible word filter bypass detected"
+
+    # ═══ Infrastructure Alerts ═══
+    - name: mindlab-infra
+      rules:
+        - alert: DatabaseConnectionPoolExhausted
+          expr: pg_stat_activity_count / pg_settings_max_connections > 0.8
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: "PostgreSQL connection pool > 80%"
+        
+        - alert: RedisMemoryHigh
+          expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Redis memory usage > 85%"
+
+        - alert: NATSConnectionDropped
+          expr: increase(nats_connection_dropped_total[5m]) > 0
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "NATS connections dropping"

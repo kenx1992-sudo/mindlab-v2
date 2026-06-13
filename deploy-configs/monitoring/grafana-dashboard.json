@@ -1,0 +1,73 @@
+# Grafana Dashboard — Mindlab Operations
+# Import via: kubectl create configmap mindlab-dashboard --from-file=dashboard.json -n monitoring
+# Or: Grafana UI → Import → paste JSON
+
+{
+  "dashboard": {
+    "title": "Mindlab Operations",
+    "tags": ["mindlab", "ops"],
+    "panels": [
+      {
+        "title": "🚨 Crisis Detection P95 Latency",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [{"expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{handler=\"/api/crisis/detect-v2\"}[5m]))"}],
+        "thresholds": {"steps": [{"color": "green","value": null},{"color": "yellow","value": 0.5},{"color": "red","value": 1.0}]}
+      },
+      {
+        "title": "📊 Crisis Detections/min",
+        "type": "timeseries",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [{"expr": "rate(crisis_detection_total[5m]) * 60", "legendFormat": "{{region}} {{risk_level}}"}]
+      },
+      {
+        "title": "⚠️ OSA Review Blocks",
+        "type": "timeseries",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [{"expr": "rate(osa_review_total{result=\"blocked\"}[5m]) * 60", "legendFormat": "{{category}}"}]
+      },
+      {
+        "title": "🔄 Backend QPS by Region",
+        "type": "timeseries",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [{"expr": "sum(rate(http_request_duration_seconds_count[5m])) by (namespace)", "legendFormat": "{{namespace}}"}]
+      },
+      {
+        "title": "💾 Backend Memory",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 4, "x": 0, "y": 4},
+        "targets": [{"expr": "container_memory_working_set_bytes{container=\"backend\"} / container_spec_memory_limit_bytes{container=\"backend\"}"}]
+      },
+      {
+        "title": "📈 HPA Replicas",
+        "type": "timeseries",
+        "gridPos": {"h": 4, "w": 8, "x": 4, "y": 4},
+        "targets": [{"expr": "kube_hpa_status_current_replicas", "legendFormat": "{{hpa}}"}]
+      },
+      {
+        "title": "🗄️ PostgreSQL Connections",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 12, "y": 4},
+        "targets": [{"expr": "pg_stat_activity_count / pg_settings_max_connections"}]
+      },
+      {
+        "title": "📡 NATS JetStream",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 16, "y": 4},
+        "targets": [{"expr": "nats_stream_messages", "legendFormat": "{{stream}}"}]
+      },
+      {
+        "title": "🛡️ Compliance Events",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [{"expr": "increase(compliance_events_total[1h])", "legendFormat": "{{namespace}} {{action}} {{detail}}"}]
+      },
+      {
+        "title": "🌐 Request Latency by Region",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [{"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, namespace))", "legendFormat": "{{namespace}}"}]
+      }
+    ]
+  }
+}
