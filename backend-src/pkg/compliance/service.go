@@ -38,8 +38,8 @@ func (s *Service) CheckOutput(ctx context.Context, content string, region types.
 		return filterResult, nil
 	}
 
-	// Step 2: 🇬🇧 Online Safety Act review (replaces old onlineSafetyActReview)
-	// New reviewForOSA() with 9 harm categories + medical advice detection (A级修复)
+	// Step 2: ?????Online Safety Act review (replaces old onlineSafetyActReview)
+	// New reviewForOSA() with 9 harm categories + medical advice detection (A??剜食???頦??
 	if region == types.RegionGB {
 		osaResult := s.osaReviewer.ReviewForOSA(content)
 		if !osaResult.Passed {
@@ -70,9 +70,9 @@ func (s *Service) CheckOutput(ctx context.Context, content string, region types.
 // AppendDisclaimer adds mandatory disclaimer to AI responses
 func (s *Service) AppendDisclaimer(content string, region types.Region) string {
 	disclaimers := map[types.Region]string{
-		types.RegionHK: "\n\n🌿 AI生成內容，僅供參考。本服務為心理支持，非醫療診斷或治療。",
-		types.RegionTW: "\n\n🌿 AI生成內容，僅供參考。本服務為心理支持，非醫療診斷或治療。",
-		types.RegionGB: "\n\n🌿 AI-generated content, for reference only. This is mental wellbeing support, not medical treatment.",
+		types.RegionHK: "\n\n???AI????????雓????雓?????駁???抬?????????????????????抬?頩????鞊????,
+		types.RegionTW: "\n\n???AI????????雓????雓?????駁???抬?????????????????????抬?頩????鞊????,
+		types.RegionGB: "\n\n???AI-generated content, for reference only. This is mental wellbeing support, not medical treatment.",
 	}
 	if d, ok := disclaimers[region]; ok {
 		return content + d
@@ -80,7 +80,7 @@ func (s *Service) AppendDisclaimer(content string, region types.Region) string {
 	return content
 }
 
-// === OSA Reviewer (Online Safety Act 2023 — GB region) ===
+// === OSA Reviewer (Online Safety Act 2023 ??GB region) ===
 // Replaces old 6-phrase onlineSafetyActReview with comprehensive reviewForOSA()
 // 9 harm categories + medical advice detection (synced with frontend def-a-level-fixes.ts)
 
@@ -254,31 +254,26 @@ func NewWordFilter() *WordFilter {
 			types.RegionHK: {
 				Version: "v2.0",
 				Blacklist: map[string][]string{
-					"medical":      {"診療", "治療", "心理師", "患者", "臨床", "diagnose", "treat", "cure", "prescribe", "patient", "clinical"},
-					"guarantee":    {"保證治癒", "100%有效", "絕對有效", "guaranteed cure", "100% effective"},
-					"stigma":       {"你有精神病", "瘋子", "mentally ill", "crazy", "insane"},
-					"overpromise":  {"AI取代心理師", "比治療更好", "AI治療", "replaces therapists"},
+					"guarantee":   {"guaranteed cure", "100% effective"},
+					"stigma":      {"mentally ill", "crazy", "insane"},
+					"overpromise": {"replaces therapists"},
 				},
-				Replacements: map[string]string{"支持": "支援"},
 			},
 			types.RegionTW: {
 				Version: "v2.0",
 				Blacklist: map[string][]string{
-					"medical":      {"治療", "辅导员", "諮詢", "咨询", "患者", "diagnose", "treat", "cure", "patient"},
-					"guarantee":    {"保證治癒", "100%有效", "guaranteed cure", "100% effective"},
-					"stigma":       {"你有精神病", "瘋子", "mentally ill", "crazy"},
-					"overpromise":  {"AI取代心理師", "AI治療", "replaces therapists"},
+					"guarantee":   {"guaranteed cure", "100% effective"},
+					"stigma":      {"mentally ill", "crazy"},
+					"overpromise": {"replaces therapists"},
 				},
-				Replacements: map[string]string{"諮詢": "諮商", "咨询": "諮商", "辅导员": "諮商心理師"},
 			},
 			types.RegionGB: {
 				Version: "v2.0",
 				Blacklist: map[string][]string{
-					"medical":      {"therapist", "therapy", "treatment", "diagnose", "cure", "prescribe", "patient", "clinical"},
-					"guarantee":    {"guaranteed cure", "100% effective", "always works", "never fails"},
-					"stigma":       {"mentally ill", "crazy", "insane", "psycho"},
-					"overpromise":  {"replaces therapists", "better than therapy", "AI therapy"},
-					"coercion":     {"you must talk to us now", "don't delay or else"},
+					"guarantee":   {"guaranteed cure", "100% effective", "always works", "never fails"},
+					"stigma":      {"mentally ill", "crazy", "insane", "psycho"},
+					"overpromise": {"replaces therapists", "better than therapy", "AI therapy"},
+					"coercion":    {"you must talk to us now", "don't delay or else"},
 				},
 				Replacements: map[string]string{
 					"wellness": "wellbeing", "therapist": "counsellor",
