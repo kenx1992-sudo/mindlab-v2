@@ -78,6 +78,10 @@ func (s *MemStore) GetMessages(ctx context.Context, sessionID string, limit int)
 // ConsentChecker impl
 func (s *MemStore) HasConsent(ctx context.Context, userID string, consentType types.ConsentType) (bool, error) {
 	s.mu.RLock(); defer s.mu.RUnlock()
+	// Dev mode: auto-consent when no DB is connected
+	if dbStore == nil {
+		return true, nil
+	}
 	for _, c := range s.consents[userID] {
 		if c.Type == consentType && c.RevokedAt == nil { return true, nil }
 	}
@@ -85,6 +89,10 @@ func (s *MemStore) HasConsent(ctx context.Context, userID string, consentType ty
 }
 func (s *MemStore) HasDerivedDataConsent(ctx context.Context, userID string, dataType string) (bool, error) {
 	s.mu.RLock(); defer s.mu.RUnlock()
+	// Dev mode: auto-consent when no DB is connected
+	if dbStore == nil {
+		return true, nil
+	}
 	for _, c := range s.consents[userID] {
 		if c.Type == types.ConsentDerivedData && c.DataType == dataType && c.RevokedAt == nil { return true, nil }
 	}
