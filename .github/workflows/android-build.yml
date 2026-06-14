@@ -66,24 +66,24 @@ jobs:
         run: npx cap sync android
 
       - name: Build APK
-        if: ${{ github.event.inputs.build_type == "apk" || github.event_name == "push" }}
+        if: ${{ github.event.inputs.build_type == 'apk' || github.event_name == 'push' }}
         working-directory: frontend-src/android
         run: ./gradlew assembleRelease
 
       - name: Build AAB
-        if: ${{ github.event.inputs.build_type == "aab" }}
+        if: ${{ github.event.inputs.build_type == 'aab' }}
         working-directory: frontend-src/android
         run: ./gradlew bundleRelease
 
       - name: Upload APK
-        if: ${{ github.event.inputs.build_type == "apk" || github.event_name == "push" }}
+        if: ${{ github.event.inputs.build_type == 'apk' || github.event_name == 'push' }}
         uses: actions/upload-artifact@v4
         with:
           name: mindlab-android-apk
           path: frontend-src/android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload AAB
-        if: ${{ github.event.inputs.build_type == "aab" }}
+        if: ${{ github.event.inputs.build_type == 'aab' }}
         uses: actions/upload-artifact@v4
         with:
           name: mindlab-android-aab
