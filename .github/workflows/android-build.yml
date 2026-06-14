@@ -68,6 +68,9 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Fix gradlew permissions
+        run: chmod +x android/gradlew
+
       - name: Build APK
         if: ${{ github.event.inputs.build_type == 'apk' || github.event_name == 'push' }}
         working-directory: frontend-src/android
