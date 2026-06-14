@@ -16,9 +16,11 @@ import MoodJournal from '@/views/MoodJournal';
 import Guardian from '@/views/Guardian';
 import Legal from '@/views/Legal';
 import PageNotFound from '@/lib/PageNotFound';
+import { useCapacitorInit } from '@/lib/capacitor-init';
 
 export default function AppShell() {
   const { isLoading } = useAuth();
+  useCapacitorInit();
 
   if (isLoading) {
     return (

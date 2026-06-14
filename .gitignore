@@ -44,3 +44,11 @@ __debug_bin
 
 # Logs
 *.log
+# Capacitor native builds
+frontend-src/ios/App/Pods/
+frontend-src/ios/App/App/public/
+frontend-src/android/app/build/
+frontend-src/android/.gradle/
+frontend-src/android/build/
+frontend-src/android/capacitor-cordova-android-plugins/
+frontend-src/resources/android/

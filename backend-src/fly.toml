@@ -1,0 +1,24 @@
+app = "mindlab-api"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile.backend"
+
+[env]
+  PORT = "8080"
+  APP_REGION = "HK"
+  GIN_MODE = "release"
+  KB_PATH = "/app/knowledge-base"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    method = "GET"
+    path = "/healthz"
