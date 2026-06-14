@@ -1,7 +1,7 @@
 {
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "backend-src/Dockerfile.backend"
+    "dockerfilePath": "Dockerfile.railway"
   },
   "deploy": {
     "healthcheckPath": "/healthz",

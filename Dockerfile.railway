@@ -1,0 +1,20 @@
+﻿# Railway Dockerfile - builds from repo root
+FROM golang:1.22-alpine AS builder
+RUN apk add --no-cache git ca-certificates tzdata
+WORKDIR /app
+COPY backend-src/go.mod backend-src/go.sum ./
+RUN go mod download
+COPY backend-src/ .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o /mindlab-server ./cmd/server
+
+FROM alpine:3.19
+RUN apk add --no-cache ca-certificates tzdata curl
+WORKDIR /app
+COPY --from=builder /mindlab-server /app/mindlab-server
+COPY backend-src/schema.sql /app/schema.sql
+COPY knowledge-base /app/knowledge-base
+ENV PORT=8080 GIN_MODE=release KB_PATH=/app/knowledge-base
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8080/healthz || exit 1
+ENTRYPOINT ["/app/mindlab-server"]
