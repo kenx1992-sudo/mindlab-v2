@@ -59,8 +59,10 @@ jobs:
 
       - name: Export IPA
         run: |
+          APP_PATH=$(find ${{ github.workspace }}/build/Mindlab.xcarchive -name "*.app" -type d | head -1)
+          echo "Found app at: $APP_PATH"
           mkdir -p ${{ github.workspace }}/build/Payload
-          cp -R ${{ github.workspace }}/build/Mindlab.xcarchive/Products/Applications/Mindlab.app ${{ github.workspace }}/build/Payload/
+          cp -R "$APP_PATH" ${{ github.workspace }}/build/Payload/
           cd ${{ github.workspace }}/build
           zip -r Mindlab.ipa Payload
 
