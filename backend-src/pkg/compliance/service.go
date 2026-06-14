@@ -39,7 +39,7 @@ func (s *Service) CheckOutput(ctx context.Context, content string, region types.
 	}
 
 	// Step 2: ?????Online Safety Act review (replaces old onlineSafetyActReview)
-	// New reviewForOSA() with 9 harm categories + medical advice detection (A??剜食???頦??
+	// New reviewForOSA() with 9 harm categories + medical advice detection (A??????????
 	if region == types.RegionGB {
 		osaResult := s.osaReviewer.ReviewForOSA(content)
 		if !osaResult.Passed {
@@ -70,9 +70,9 @@ func (s *Service) CheckOutput(ctx context.Context, content string, region types.
 // AppendDisclaimer adds mandatory disclaimer to AI responses
 func (s *Service) AppendDisclaimer(content string, region types.Region) string {
 	disclaimers := map[types.Region]string{
-		types.RegionHK: "\n\n???AI????????雓????雓?????駁???抬?????????????????????抬?頩????鞊????,
-		types.RegionTW: "\n\n???AI????????雓????雓?????駁???抬?????????????????????抬?頩????鞊????,
-		types.RegionGB: "\n\n???AI-generated content, for reference only. This is mental wellbeing support, not medical treatment.",
+		types.RegionHK: "\n\n🌿 AI生成內容，僅供參考。本服務為心理支援，非醫療用途。",
+		types.RegionTW: "\n\n🌿 AI生成內容，僅供參考。本服務為心理支援，非醫療用途。",
+		types.RegionGB: "\n\n🌿 AI-generated content, for reference only. This is mental wellbeing support, not medical treatment.",
 	}
 	if d, ok := disclaimers[region]; ok {
 		return content + d
