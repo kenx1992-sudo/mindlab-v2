@@ -1,0 +1,90 @@
+﻿name: "Android Build"
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build type (apk or aab)"
+        required: true
+        type: choice
+        options:
+          - apk
+          - aab
+        default: "aab"
+  push:
+    branches: [main]
+    paths:
+      - "frontend-src/android/**"
+      - "frontend-src/src/**"
+      - "frontend-src/public/**"
+      - "frontend-src/capacitor.config.json"
+      - "frontend-src/package.json"
+      - "frontend-src/package-lock.json"
+
+jobs:
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend-src
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend-src/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Decode Keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/mindlab-release.keystore
+
+      - name: Create key.properties
+        run: |
+          echo "storeFile=mindlab-release.keystore" > android/key.properties
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build APK
+        if: ${{ github.event.inputs.build_type == "apk" || github.event_name == "push" }}
+        working-directory: frontend-src/android
+        run: ./gradlew assembleRelease
+
+      - name: Build AAB
+        if: ${{ github.event.inputs.build_type == "aab" }}
+        working-directory: frontend-src/android
+        run: ./gradlew bundleRelease
+
+      - name: Upload APK
+        if: ${{ github.event.inputs.build_type == "apk" || github.event_name == "push" }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mindlab-android-apk
+          path: frontend-src/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload AAB
+        if: ${{ github.event.inputs.build_type == "aab" }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mindlab-android-aab
+          path: frontend-src/android/app/build/outputs/bundle/release/app-release.aab
